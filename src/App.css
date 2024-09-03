@@ -236,12 +236,12 @@ button {
 /* 슬라이더 페이지 버튼 */
 .main-bn > .slider > .page-btns {
   position:absolute;
-  top: 50vh;
+  top: 49vh; /*50vh*/
   left:50%;
   transform:translateX(-50%);
 
   background-color: rgba(1, 1, 1, 0.2);
-  padding: 5px;
+  padding: 3px; /*5px*/
   border-radius: 50px;
 }
 
@@ -283,10 +283,66 @@ button {
 
 .swiper{
   --swiper-theme-color:#fff;
-  }
+}
 
   #product :hover{
     background-color: #000;
     opacity: 80%;
     transition: all 1s;
+}
+
+.product-row {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.swiper-container {
+  display: flex;
+  width: 90vw;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.swiper-slide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.swiper-button-prev, .swiper-button-next {
+  color: #1e1e1e; /* 원하는 색깔로 변경 */
+  font-size: 20px; /* 버튼 크기 조정 (옵션) */
+}
+
+
+.swiper-button-prev:hover, .swiper-button-next:hover {
+  color: #abd548; 
+}
+
+.swiper-button-prev,
+.swiper-button-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+
+.swiper-pagination-bullet {
+  background: #838383; 
+
+}
+
+
+.swiper-pagination-bullet-active {
+  background: #abd548; 
+
+}
+
+.swiper-pagination {
+  position: absolute;
+  transform: translateY(50%);
+  width: auto;
+
 }

@@ -46,7 +46,6 @@
     line-height: 3rem;
 }
 
-
 .saleprice {
     color: #ff7878;
     font-weight: bold;
@@ -146,6 +145,12 @@
 
 .product-info h2{
     font-weight: bold;
+}
+
+.product-info h4{
+    font-weight: normal;
+    font-size: 18px;
+    text-align: justify;
 }
 
 

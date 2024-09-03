@@ -17,17 +17,25 @@ const SaleListBlock = styled.div`
 
 const SaleList = () => {
     
-    const [sale, setsale] = useState(null);
+    const [sale, setSale] = useState(null);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
       const fetchData = async () => {
         setLoading(true);
         try {
-          const response = await axios.get("https://prod.olyoung.com/api/items/all");
+          const response = await axios.get("/json/salelist.json");
           console.log(response.data); // API로부터 받아온 데이터 확인
           const saleArray = Array.isArray(response.data) ? response.data : [response.data];
-          setsale(saleArray);
+
+          // 할인율 계산 후 정렬
+          const sortedSaleArray = saleArray.sort((a, b) => {
+            const discountA = ((a.price - a.salePrice) / a.price) * 100;
+            const discountB = ((b.price - b.salePrice) / b.price) * 100;
+            return discountB - discountA; // 높은 할인율 순으로 정렬
+          });
+
+          setSale(sortedSaleArray);
         } catch (e) {
           console.log(e);
         }

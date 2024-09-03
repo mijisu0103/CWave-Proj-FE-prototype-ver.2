@@ -1,31 +1,103 @@
-import React, { useEffect } from 'react';
-import ProductList from '../ProductList';
-import { getTagsByIndices, getTagsByRange } from '../tags';
-import $ from 'jquery';
+import React, { useState, useEffect } from 'react';
+import { useProductList } from '../ProductList'; 
+import ProductItem from '../ProductItem';
 import { useNavigate } from "react-router-dom";
 import { Helmet } from 'react-helmet';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import $ from 'jquery';
 
-import { Swiper, SwiperSlide } from "swiper/react";
-import { EffectCoverflow, Navigation} from "swiper";
-
-      
-const MainHtml = () => {  
-
+const MainHtml = () => {
+  const { products, loading } = useProductList(); 
+  const [slides, setSlides] = useState([]);
+  const [viewCounts, setViewCounts] = useState({});
   const navigate = useNavigate();
 
-  const navHome = () => {navigate("/")};
-  const navSignup = () => {navigate("/signup")};
-  const navLogin = () => {navigate("/login")};
-  const navOrder = () => {navigate("/order")};
-  const navBest = () => {navigate("/bestsellers")};
-  const navSale = () => {navigate("/sale")};
-
+  const generateRandomData = () => {
+    const shuffledProducts = [...products].map(product => ({
+      ...product,
+      order: Math.random() * 0.1 
+    })).sort((a, b) => a.order - b.order);
+  
+    const newViewCounts = {};
+    const maxInitialViewCount = 100000; // Set a high initial view count for the top product
+    const minInitialViewCount = 1000; // Set a lower initial view count for the last product
+  
+    shuffledProducts.forEach((product, index) => {
+      // Calculate an initial view count based on rank
+      const initialViewCount = maxInitialViewCount - (index * (maxInitialViewCount - minInitialViewCount) / (shuffledProducts.length - 1));
+  
+      // Apply a growth factor
+      const rankFactor = 1.05 + Math.random() * 0.05 * (shuffledProducts.length - index) / shuffledProducts.length;
+  
+      // Calculate the new view count
+      const newViewCount = Math.round(initialViewCount * rankFactor);
+  
+      newViewCounts[product.id] = newViewCount;
+    });
+  
+    return { shuffledProducts, newViewCounts };
+  };
+  
+  
+  const updateSlidesAndViews = () => {
+    if (!loading && products.length > 0) {
+      const savedData = localStorage.getItem('liveRankingData');
+      
+      let currentProducts, currentViewCounts;
+  
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        currentProducts = parsedData.shuffledProducts;
+        currentViewCounts = parsedData.viewCounts;
+      } else {
+        const randomData = generateRandomData();
+        currentProducts = randomData.shuffledProducts;
+        currentViewCounts = randomData.newViewCounts;
+  
+        localStorage.setItem('liveRankingData', JSON.stringify({
+          shuffledProducts: currentProducts,
+          viewCounts: currentViewCounts
+        }));
+      }
+  
+      setViewCounts(currentViewCounts);
+  
+      // Sort products based on viewCounts in descending order
+      currentProducts.sort((a, b) => currentViewCounts[b.id] - currentViewCounts[a.id]);
+  
+      const productsPerSlide = 1;
+      const newSlides = [];
+      for (let i = 0; i < currentProducts.length; i += productsPerSlide) {
+        newSlides.push(currentProducts.slice(i, i + productsPerSlide));
+      }
+      setSlides(newSlides);
+    }
+  };
 
   useEffect(() => {
-    console.clear();
+    if (!loading) {
+      updateSlidesAndViews();
+      const intervalId = setInterval(() => {
+        const randomData = generateRandomData();
+        localStorage.setItem('liveRankingData', JSON.stringify({
+          shuffledProducts: randomData.shuffledProducts,
+          viewCounts: randomData.newViewCounts
+        }));
+        updateSlidesAndViews();
+      }, 5 * 60 * 1000); // 5분에 한번씩 업데이트
+
+      return () => clearInterval(intervalId); 
+    }
+  }, [loading, products]);
+
+  useEffect(() => {
+    if (loading) return;
 
     const handlePageButtonClick = function () {
-      
       const $clicked = $(this);
       const $slider = $clicked.closest('.slider');
       const index = $clicked.index();
@@ -35,16 +107,15 @@ const MainHtml = () => {
       let $post;
 
       if (isLeft) {
-        $post = $current.prev(); 
+        $post = $current.prev();
       } else {
-        $post = $current.next(); 
+        $post = $current.next();
       }
-
 
       if ($post.length === 0) {
         $post = isLeft
-          ? $slider.find(' > .slides > .bn:last-child') 
-          : $slider.find(' > .slides > .bn:first-child'); 
+          ? $slider.find(' > .slides > .bn:last-child')
+          : $slider.find(' > .slides > .bn:first-child');
       }
 
       $current.removeClass('active');
@@ -82,43 +153,38 @@ const MainHtml = () => {
       clearInterval(intervalId);
       $('.main-bn > .slider > .page-btns > .page-btn').off('click', handlePageButtonClick);
     };
-  }, []);
+  }, [loading]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div>
-        <Helmet>
-          <title>OLIVE YOUNG Global | Global Lifestyle Platform</title>
-        </Helmet>
-      
+      <Helmet>
+        <title>OLIVE YOUNG Global | Global Lifestyle Platform</title>
+      </Helmet>
       <header>
         <div className="logo">
-          <button onClick={navHome}><img src={process.env.PUBLIC_URL + './logo.svg'} alt="logo" /></button>
+          <button onClick={() => navigate("/")}><img src={process.env.PUBLIC_URL + './logo.svg'} alt="logo" /></button>
         </div>
         <div className="header-search">
           <input type="text" placeholder="Search for a product or brand..." />
           <button><img src="icon_search_md.png" alt="search icon" style={{ width: '28px', height: '28px', padding: '2px', marginRight: '2px' }}/></button>
         </div>
-{/* 
-        <div className="header-links">
-          <button onClick={navSignup}>Sign up</button>
-          <button onClick={navLogin}>Log in</button>
-          <button onClick={navOrder}>Order</button>
-        </div> */}
       </header>
-
       <div className="nav-bar-cont">
         <ul className="nav-bar">
           <div className="menu1">
-            <li className="mhl"> <button onClick={navBest}>BEST SELLERS</button></li>
+            <li className="mhl"><button onClick={() => navigate("/bestsellers")}>BEST SELLERS</button></li>
           </div>
           <div className="menu2">
-            <li className="mhl"><button onClick={navSale}>SALE</button></li>
+            <li className="mhl"><button onClick={() => navigate("/sale")}>SALE</button></li>
           </div>
         </ul>
       </div>
-
       <main>
-        <div>   
+        <div>
           <div className="imgslid wrap">
             <div className="main-bn">
               <div className="slider">
@@ -140,21 +206,36 @@ const MainHtml = () => {
                   </div>
                 </div>
               </div>
-            </div>    
-          </div>
-        </div> 
-      </main>
-
-    
-      <div className="products">
-              <div className="top3">Live Ranking</div>
-              <div className="product-row">
-                <ProductList/>
-                {/* <Product label="Best" imgsrc="" alt="1" name="[광채토닝] 아이오페 글루타 비타민C 토닝 앰플 23g 기획" price="30" tags={getTagsByIndices([0, 2])}></Product>
-                <Product label="Best" imgsrc="" alt="2" name="item2" price="20" tags={getTagsByRange('0:4')}></Product>
-                <Product label="Best" imgsrc="" alt="3" name="item3" price="40" tags={getTagsByRange('0:2')}></Product> */}
-              </div>
             </div>
+          </div>
+        </div>
+      </main>
+      <div className="products">
+        <div className="top3">Live Ranking</div>
+        <div className="swiper-container">
+          <Swiper
+            modules={[Navigation, Pagination]}
+            direction='horizontal'
+            spaceBetween={20}
+            slidesPerView={3}
+            navigation
+            pagination={{ clickable: true }}
+            breakpoints={{
+              640: { slidesPerView: 1 },
+              768: { slidesPerView: 2 },
+              1024: { slidesPerView: 3 },
+            }}
+          >
+            {slides.map((slideProducts, index) => (
+              <SwiperSlide key={index} style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
+                {slideProducts.map(product => (
+                  <ProductItem key={product.id} product={product} viewCount={viewCounts[product.id]} />
+                ))}
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      </div>
       <footer>
         {/* Footer content here */}
       </footer>

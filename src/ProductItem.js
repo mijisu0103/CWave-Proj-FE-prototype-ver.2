@@ -14,7 +14,7 @@ const ProductItemBlock = styled.div`
     margin-bottom: 5vh;
     flex-shrink: 0;
     margin-top: 3vh;
-    height: 60vh;
+    height: 70vh;
   }
 
   .product img {
@@ -32,28 +32,28 @@ const ProductItemBlock = styled.div`
   }
 
   .product .product-name {
-    font-size: 20px;
+    font-size: 16px;
     margin: 10px 0;
     color: #333;
     margin-top: 2vh;
-    line-height: 1.2em;
-    max-height: 2.4em; 
+    line-height: 1em;
+    max-height: 2em;
     text-overflow: ellipsis;
   }
 
   .product .product-price {
-  font-size: 16px;
-  color: black;
-  text-decoration: line-through;
-  font-weight: bolder;
-  margin-top: 1vh;
+    font-size: 16px;
+    color: black;
+    text-decoration: line-through;
+    font-weight: bolder;
+    margin-top: 1.5vh;
   }
 
   .product .product-saleprice {
-    font-size: 28px;
+    font-size: 24px;
     color: #ff7878;
     font-weight: bolder;
-    margin-top: 4vh;
+    margin-top: 6vh;
   }
 
   .product .product-tags {
@@ -72,43 +72,38 @@ const ProductItemBlock = styled.div`
   }
 
   .product .product-action {
-    font-size: 23px;
+    font-size: 20px;
     color: #abd548;
     font-weight: bold;
     cursor: pointer;
     display: inline-block;
-    margin-top: 4vh;
-    margin-left: 3vw;
-    margin-right: 3vw;
+    margin-top: 1vh;
+    margin-left: 2.5vw;
+    margin-right: 2.5vw;
+  }
+
+  .product .product-views {
+    font-size: 12px;
+    color: #999;
+    margin-top: 0.2vh;
   }
 `;
 
-const ProductItem = ({ product }) => {
-  
+const ProductItem = ({ product, viewCount }) => {
   const navigate = useNavigate();
   const navDetail = () => { navigate(`/product/${product.id}`) };
 
   const { id, category, imageUrl, name, price, salePrice } = product;
 
-  // Ensure tags is an array and filter out empty or invalid tags
-  // const tagsArray = Array.isArray(tags) ? tags : [];
-
   return (
     <ProductItemBlock>
       <div className="product">
-        {/* <span className="product-label">{category}</span> */}
         <img src={imageUrl} alt={id} />
+        {viewCount && <div className="product-views">Views: {viewCount}</div>}
         <div className="product-name">{name}</div>
         <div className="product-saleprice">$ {salePrice}</div>
         <div className="product-price">$ {price}</div>
 
-        {/* {tagsArray.length > 0 && (
-            <div className="product-tags">
-                {tagsArray.map((tags, index) => (
-                <span key={index}>{product.tags}</span>
-                ))}
-            </div>
-        )} */}
         <div>
           <button onClick={navDetail} className="product-action">More</button>
           <span className="product-action">Cart</span>

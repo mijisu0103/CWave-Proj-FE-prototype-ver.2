@@ -24,7 +24,7 @@ const BestList = () => {
       const fetchData = async () => {
         setLoading(true);
         try {
-          const response = await axios.get("https://prod.olyoung.com/api/items/all");
+          const response = await axios.get("/json/bestsellersranking.json");
           console.log(response.data); // API로부터 받아온 데이터 확인
           const bestArray = Array.isArray(response.data) ? response.data : [response.data];
           setbest(bestArray);
