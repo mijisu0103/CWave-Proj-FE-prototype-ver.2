@@ -16,7 +16,7 @@ const MainHtml = () => {
   const [viewCounts, setViewCounts] = useState({});
   const navigate = useNavigate();
 
-  const generateRandomData = () => {
+  const generateRandomData = (currentViewCounts) => {
     const shuffledProducts = [...products].map(product => ({
       ...product,
       order: Math.random() * 0.1 
@@ -27,21 +27,18 @@ const MainHtml = () => {
     const minInitialViewCount = 1000; // Set a lower initial view count for the last product
   
     shuffledProducts.forEach((product, index) => {
-      // Calculate an initial view count based on rank
-      const initialViewCount = maxInitialViewCount - (index * (maxInitialViewCount - minInitialViewCount) / (shuffledProducts.length - 1));
+      // Get the current view count or set it to the minimum if it doesn't exist
+      const currentViewCount = currentViewCounts[product.id] || minInitialViewCount;
   
-      // Apply a growth factor
+      // Calculate a new view count based on rank and current view count
       const rankFactor = 1.05 + Math.random() * 0.05 * (shuffledProducts.length - index) / shuffledProducts.length;
-  
-      // Calculate the new view count
-      const newViewCount = Math.round(initialViewCount * rankFactor);
+      const newViewCount = Math.round(currentViewCount * rankFactor);
   
       newViewCounts[product.id] = newViewCount;
     });
   
     return { shuffledProducts, newViewCounts };
   };
-  
   
   const updateSlidesAndViews = () => {
     if (!loading && products.length > 0) {
@@ -54,20 +51,24 @@ const MainHtml = () => {
         currentProducts = parsedData.shuffledProducts;
         currentViewCounts = parsedData.viewCounts;
       } else {
-        const randomData = generateRandomData();
-        currentProducts = randomData.shuffledProducts;
-        currentViewCounts = randomData.newViewCounts;
-  
-        localStorage.setItem('liveRankingData', JSON.stringify({
-          shuffledProducts: currentProducts,
-          viewCounts: currentViewCounts
-        }));
+        currentViewCounts = {};
+        currentProducts = products;
       }
   
-      setViewCounts(currentViewCounts);
+      const randomData = generateRandomData(currentViewCounts);
+      currentProducts = randomData.shuffledProducts;
+      const newViewCounts = randomData.newViewCounts;
   
-      // Sort products based on viewCounts in descending order
-      currentProducts.sort((a, b) => currentViewCounts[b.id] - currentViewCounts[a.id]);
+      // Save updated view counts and product order to localStorage
+      localStorage.setItem('liveRankingData', JSON.stringify({
+        shuffledProducts: currentProducts,
+        viewCounts: newViewCounts
+      }));
+  
+      setViewCounts(newViewCounts);
+  
+      // Sort products based on new viewCounts in descending order
+      currentProducts.sort((a, b) => newViewCounts[b.id] - newViewCounts[a.id]);
   
       const productsPerSlide = 1;
       const newSlides = [];
@@ -77,22 +78,18 @@ const MainHtml = () => {
       setSlides(newSlides);
     }
   };
-
+  
   useEffect(() => {
     if (!loading) {
       updateSlidesAndViews();
       const intervalId = setInterval(() => {
-        const randomData = generateRandomData();
-        localStorage.setItem('liveRankingData', JSON.stringify({
-          shuffledProducts: randomData.shuffledProducts,
-          viewCounts: randomData.newViewCounts
-        }));
         updateSlidesAndViews();
-      }, 5 * 60 * 1000); // 5분에 한번씩 업데이트
-
-      return () => clearInterval(intervalId); 
+      }, 5 * 60 * 1000); // Update every 5 minutes
+  
+      return () => clearInterval(intervalId);
     }
   }, [loading, products]);
+  
 
   useEffect(() => {
     if (loading) return;
