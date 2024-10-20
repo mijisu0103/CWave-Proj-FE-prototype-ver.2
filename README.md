@@ -9,5 +9,5 @@ For this reason, this version was created to present what would working prototyp
 
 I am aware that it still needs improvements including adding a section where users can see their current region and select other regions for differentiated rankings and products. 
 
-You can have a look at the visulaised prototype here:
+You can have a look at the visualised prototype here:
 https://www.youtube.com/watch?v=a1PUDV4zJEI
